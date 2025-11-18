@@ -1001,6 +1001,8 @@ except Exception as e:
 
 sys.stdout.flush()
 
+
+
 # ============================================================================
 # SECTION 9: TOP 5 FEATURES - DEBUGGED
 # ============================================================================
@@ -1086,15 +1088,16 @@ except Exception as e:
 
 sys.stdout.flush()
 
-# ============================================================================
-# SECTION 11: SAVE MODEL - DEBUGGED
-# ============================================================================
 
+
+# ============================================================
+# SAVING MODEL FOR DEPLOYMENT
+# ============================================================
 print("\n" + "="*80)
 print("SAVING MODEL FOR DEPLOYMENT")
 print("="*80)
-
 print("DEBUG: Attempting to save model...")
+
 try:
     import pickle
     
@@ -1103,25 +1106,17 @@ try:
         'preprocessor': preprocessor,
         'features': FEATURES,
         'optimal_threshold': best_threshold_f1,
-        'metrics': metrics_test_optimal
+        # Remove or comment out this line if metrics aren't needed:
+        # 'metrics': metrics_test_optimal
     }
     
     with open('attendance_model.pkl', 'wb') as f:
         pickle.dump(model_package, f)
-
-    print("✓ Model saved as 'attendance_model.pkl'")
-    print(f"✓ Optimal threshold saved: {best_threshold_f1:.2f}")
-    print("✓ Ready for production use!")
+    
+    print("✅ Model saved as 'attendance_model.pkl'")
+    print(f"   Optimal threshold saved: {best_threshold_f1:.2f}")
     
 except Exception as e:
     print(f"❌ ERROR saving model: {e}")
-    import traceback
-    traceback.print_exc()
 
-sys.stdout.flush()
 
-print("\n" + "="*80)
-print("ANALYSIS COMPLETE!")
-print("="*80)
-
-sys.stdout.flush()

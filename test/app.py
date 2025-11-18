@@ -106,15 +106,31 @@ def load_model_components():
 @st.cache_data
 def load_survey_data():
     """Load the survey data Excel file"""
-    file_path = 'SMU_Survey_Final.xlsx'
+    
+    # Try multiple possible paths
+    possible_paths = [
+        'SMU_Survey_Final.xlsx',           # Same directory
+        'test/SMU_Survey_Final.xlsx',      # In test subfolder
+        '../SMU_Survey_Final.xlsx',        # Parent directory
+        os.path.join(os.path.dirname(__file__), 'SMU_Survey_Final.xlsx')  # Relative to app.py
+    ]
+    
+    df = None
+    file_path = None
+    
+    for path in possible_paths:
+        if os.path.exists(path):
+            file_path = path
+            break
+    
+    if file_path is None:
+        return None, "Survey data file 'SMU_Survey_Final.xlsx' not found in any expected location."
+    
     try:
         df = pd.read_excel(file_path)
         return df, None
-    except FileNotFoundError:
-        return None, f"Survey data file '{file_path}' not found."
     except Exception as e:
         return None, f"Error loading survey data: {str(e)}"
-
 
 # Initialize session state for checkbox selections
 if 'selected_students' not in st.session_state:

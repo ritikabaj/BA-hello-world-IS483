@@ -715,9 +715,38 @@ print("STEP 5: Enhanced Model - XGBoost Training")
 print("="*70)
 
 # 1. Preprocess data
+# CLEAN DATA FIRST - Apply the same cleaning to X_train, X_valid, X_test
+print("\nCleaning data before preprocessing...")
+
+# Helper functions are already defined at the top of your script
+# Apply cleaning to X_train
+X_train = X_train.copy()
+X_train['past_attend_count'] = X_train['past_attend_count'].apply(range_to_float)
+X_train['no_show_count'] = X_train['no_show_count'].apply(range_to_float)
+X_train['year'] = X_train['year'].apply(year_to_int)
+X_train['age'] = pd.to_numeric(X_train['age'], errors='coerce')
+
+# Apply cleaning to X_valid
+X_valid = X_valid.copy()
+X_valid['past_attend_count'] = X_valid['past_attend_count'].apply(range_to_float)
+X_valid['no_show_count'] = X_valid['no_show_count'].apply(range_to_float)
+X_valid['year'] = X_valid['year'].apply(year_to_int)
+X_valid['age'] = pd.to_numeric(X_valid['age'], errors='coerce')
+
+# Apply cleaning to X_test
+X_test = X_test.copy()
+X_test['past_attend_count'] = X_test['past_attend_count'].apply(range_to_float)
+X_test['no_show_count'] = X_test['no_show_count'].apply(range_to_float)
+X_test['year'] = X_test['year'].apply(year_to_int)
+X_test['age'] = pd.to_numeric(X_test['age'], errors='coerce')
+
+print("✓ Data cleaned successfully!")
+
+# NOW proceed with preprocessing
 X_train_prep = preprocessor.fit_transform(X_train)
 X_valid_prep = preprocessor.transform(X_valid)
 X_test_prep = preprocessor.transform(X_test)
+
 
 # 2. Handle class imbalance
 neg_count = (y_train == 0).sum()
@@ -754,12 +783,6 @@ best_xgb = grid_search.best_estimator_
 # 4. Evaluate
 y_prob_val = best_xgb.predict_proba(X_valid_prep)[:, 1]
 y_prob_test = best_xgb.predict_proba(X_test_prep)[:, 1]
-
-print("\n" + "="*70)
-print("MODEL PERFORMANCE")
-print("="*70)
-print(f"Validation ROC-AUC: {roc_auc_score(y_valid, y_prob_val, sample_weight=w_valid):.4f}")
-print(f"Test ROC-AUC:       {roc_auc_score(y_test, y_prob_test, sample_weight=w_test):.4f}")
 
 # 5. TOP 5 FEATURES
 print("\n" + "="*70)
@@ -946,64 +969,8 @@ print(f"  Validation F1 at this threshold: {best_f1_val:.4f}")
 # Apply optimal threshold to test set
 y_pred_test_optimal = (y_prob_test >= best_threshold_f1).astype(int)
 
-print(f"  Test F1 at this threshold: {f1_score(y_test, y_pred_test_optimal, zero_division=0, sample_weight=w_test):.4f}")
-sys.stdout.flush()
 
-# ============================================================================
-# SECTION 7: 5 MODEL METRICS (WITH OPTIMIZED THRESHOLD) - DEBUGGED
-# ============================================================================
 
-print("\n" + "="*80)
-print("MODEL PERFORMANCE METRICS (Optimized Threshold = {:.2f})".format(best_threshold_f1))
-print("="*80)
-
-print("\nDEBUG: Calculating metrics...")
-try:
-    roc_auc = roc_auc_score(y_test, y_prob_test, sample_weight=w_test)
-    print(f"DEBUG: ROC-AUC calculated: {roc_auc:.4f}")
-    
-    accuracy = accuracy_score(y_test, y_pred_test_optimal, sample_weight=w_test)
-    print(f"DEBUG: Accuracy calculated: {accuracy:.4f}")
-    
-    precision = precision_score(y_test, y_pred_test_optimal, zero_division=0, sample_weight=w_test)
-    print(f"DEBUG: Precision calculated: {precision:.4f}")
-    
-    recall = recall_score(y_test, y_pred_test_optimal, zero_division=0, sample_weight=w_test)
-    print(f"DEBUG: Recall calculated: {recall:.4f}")
-    
-    f1 = f1_score(y_test, y_pred_test_optimal, zero_division=0, sample_weight=w_test)
-    print(f"DEBUG: F1 calculated: {f1:.4f}")
-    
-    metrics_test_optimal = {
-        'ROC-AUC': roc_auc,
-        'Accuracy': accuracy,
-        'Precision': precision,
-        'Recall': recall,
-        'F1 Score': f1
-    }
-
-    print(f"\nTEST SET PERFORMANCE:")
-    print("-" * 80)
-    for metric, value in metrics_test_optimal.items():
-        print(f"  {metric:15s}: {value:.4f}")
-    
-    print("\n" + "="*80)
-    print("METRIC EXPLANATIONS")
-    print("="*80)
-    print("""
-• ROC-AUC: Ability to rank attendees vs non-attendees (0.5=random, 1.0=perfect)
-• Accuracy: % of all correct predictions (both classes combined)
-• Precision: When predicting WILL ATTEND, how often is it correct?
-• Recall: Of all students who will attend, what % does model catch?
-• F1 Score: Harmonic mean of Precision & Recall (balances both metrics)
-    """)
-    
-except Exception as e:
-    print(f"❌ ERROR in metrics: {e}")
-    import traceback
-    traceback.print_exc()
-
-sys.stdout.flush()
 
 # ============================================================================
 # SECTION 8: CONFUSION MATRIX - DEBUGGED

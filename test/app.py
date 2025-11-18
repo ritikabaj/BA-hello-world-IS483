@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import pickle
 import warnings
+import os
 from pathlib import Path
 
 
@@ -75,18 +76,30 @@ def year_to_int(x):
     return x
 
 
-# Load model and preprocessor
+
+
 @st.cache_resource
 def load_model_components():
     """Load trained model and preprocessor, or indicate training is needed"""
     try:
-        with open('attendance_model.pkl', 'rb') as f:
+        # Define the model file path
+        model_path = 'test/attendance_model.pkl'  # Ensure this path is correct for your deployment
+
+        # Check if the file exists at the expected path
+        if not os.path.exists(model_path):
+            return None, f"Model file not found at {model_path}. Please ensure the model is uploaded and accessible."
+
+        # Load the model
+        with open(model_path, 'rb') as f:
             model_data = pickle.load(f)
+        
+        # If loading is successful, return model data
         return model_data, None
     except FileNotFoundError:
-        return None, "Model file not found. Please run training first."
+        return None, f"Model file not found at {model_path}. Please run training first and make sure the file is in the correct location."
     except Exception as e:
         return None, f"Error loading model: {str(e)}"
+
 
 
 # Load or check for Excel data file

@@ -19,6 +19,34 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.impute import SimpleImputer
 from packaging import version
+import re
+
+def range_to_float(x):
+    """Convert range strings like '2-3' to average float"""
+    if isinstance(x, str) and '-' in x:
+        parts = x.split('-')
+        try:
+            a, b = float(parts[0]), float(parts[1])
+            return (a + b) / 2
+        except:
+            return np.nan
+    try:
+        return float(x)
+    except:
+        return np.nan
+
+def year_to_int(x):
+    """Extract year number from strings like 'Year 3'"""
+    if isinstance(x, str):
+        m = re.search(r'\d+', x)
+        if m:
+            return int(m.group())
+        return np.nan
+    try:
+        return int(x)
+    except:
+        return np.nan
+
 
 warnings.filterwarnings("ignore")
 
@@ -125,61 +153,6 @@ if missing:
 data = df[list(use_cols.values())].rename(columns={v:k for k,v in use_cols.items()})
 print(f"[ok] Selected {len(use_cols)} features from {len(data)} rows (duplicates retained).")
 
-# ======================
-# Visual EDA
-# ======================
-explain("Demographics", 
-        "Age uses a histogram; gender, year, and school are counts. "
-        "Use this to confirm the sample distribution looks sensible.")
-
-# Age
-plt.figure(figsize=(6,4))
-data['age'].dropna().astype(float).plot(kind='hist', bins=12, edgecolor='white')
-plt.title('Age Distribution'); plt.xlabel('Age'); plt.ylabel('Count'); plt.tight_layout()
-plt.show()
-
-# Gender
-plt.figure(figsize=(5,4))
-ax = data['gender'].astype(str).str.strip().value_counts().plot(kind='bar')
-plt.title('Gender'); plt.ylabel('Count'); annotate_bars(ax); plt.tight_layout(); plt.show()
-
-# Year
-plt.figure(figsize=(6,4))
-ax = data['year'].astype(str).str.strip().value_counts().plot(kind='bar')
-plt.title('Year of Study'); plt.ylabel('Count'); annotate_bars(ax); plt.tight_layout(); plt.show()
-
-# School
-plt.figure(figsize=(8,4))
-ax = data['school'].astype(str).str.strip().value_counts().plot(kind='bar')
-plt.title('School'); plt.ylabel('Count'); annotate_bars(ax); plt.tight_layout(); plt.show()
-
-# Intent + behaviour
-explain("Intent & Behaviour", 
-        "Intent is on a 0–10 scale (histogram). Past attendance and no-shows "
-        "are categorical buckets—helpful to gauge engagement history.")
-
-plt.figure(figsize=(6,4))
-data['intent_90d'].dropna().plot(kind='hist', bins=11, edgecolor='white')
-plt.title('Intent (0–10)'); plt.xlabel('Score'); plt.ylabel('Count'); plt.tight_layout(); plt.show()
-
-for col, title in [('past_attend_count','Past Attend Count (6 months)'),
-                   ('no_show_count','No-Show Count (6 months)')]:
-    plt.figure(figsize=(6,4))
-    ax = data[col].astype(str).str.strip().value_counts().plot(kind='bar')
-    plt.title(title); plt.ylabel('Count'); annotate_bars(ax); plt.tight_layout(); plt.show()
-
-# Preferences
-explain("Preferences", 
-        "These charts show what students say they’d pick next (program), "
-        "preferred delivery format, and which time windows are most popular.")
-
-plt.figure(figsize=(7,4))
-ax = data['next_program'].astype(str).str.strip().value_counts().plot(kind='bar')
-plt.title('Next Program Preference'); plt.ylabel('Count'); annotate_bars(ax); plt.tight_layout(); plt.show()
-
-plt.figure(figsize=(6,4))
-ax = data['preferred_format'].astype(str).str.strip().value_counts().plot(kind='bar')
-plt.title('Preferred Format'); plt.ylabel('Count'); annotate_bars(ax); plt.tight_layout(); plt.show()
 
 # Multi-select time windows
 def multi_hot_counts(series, choices):

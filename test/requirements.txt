@@ -2,6 +2,6 @@ streamlit
 numpy
 pickle-mixin
 openpyxl
-scikit-learn==1.0.2  # Adjust according to the version used for training
+scikit-learn==1.1.2  # Adjust according to the version used for training
 xgboost==1.4.2  # Adjust as needed
 pandas==1.2.4  # Ensure consistency with training environment
